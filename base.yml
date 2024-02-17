@@ -1,4 +1,4 @@
-x-common:
+-common:
   - &db-env
     secrets:
       - POSTGRES_USER
