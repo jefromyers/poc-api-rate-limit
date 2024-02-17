@@ -1,0 +1,47 @@
+x-common:
+  - &db-env
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    environment:
+      POSTGRES_USER: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_DB: /run/secrets/POSTGRES_DB
+
+services:
+  db:
+    container_name: rlapi-db
+    image: postgres:16
+    <<: *db-env
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  backend:
+    container_name: rlapi
+    image: jefromyers/rlapi:latest
+    build:
+      context: .
+      dockerfile: ./docker/api.dockerfile
+    <<: *db-env
+    volumes:
+      - ./api:/api
+    ports:
+      - ${api_port}:8000
+    networks:
+      - backend
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+secrets:
+  # Database
+  POSTGRES_USER:
+    file: ./data/env/POSTGRES_USER
+  POSTGRES_PASSWORD:
+    file: ./data/env/POSTGRES_PASSWORD
+  POSTGRES_DB:
+    file: ./data/env/POSTGRES_DB
+
+networks:
+  backend:
